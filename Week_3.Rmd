@@ -1,0 +1,275 @@
+---
+title: 'Week 3: Loop Functions and Debugging'
+author: "Katherine Ramírez Cubillos"
+date: "21/8/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Loop Funcitons
+Loop functions are some of the most powerful funcitons in the R language and they make it kind of very easy to use, especially in an interactive setting. 
+
+## Looping on the command line
+
+Writing for, while loops is useful when programming but not particularly easy working interactively on the command line. There are some functions which implement looping to make life easier. 
+
+- **lapply**: Loop over a list and evaluate a function on each element. 
+- **sapply**: Same as **lapply** but try to simplify the result.
+- **apply**: Apply a function over the margins of an array. 
+- **tapply**: Apply a function over subset of a vector. 
+- **mapply**: Multivariate version of **lapply**
+
+An auxiliary function **split** is also useful, particularly in conjunction with **lapply**. 
+
+### Lapply
+
+The idea behind lapply is that you have a list of objects and you want to loop over the list of objects and apply a function to every element of that list. 
+
+**lapply** takes three arguments: (1) a list **x**; (2) a function (or the name of a function) **FUN**, (3) other arguments via its ... argument. If **x** is not a list, it will be coerced to a list using **as.list**. 
+```{r}
+lapply
+```
+The actual looping is done internally in C code. 
+
+**lapply** always returns a list, regardless of the class of the input. 
+```{r}
+x <- list(a=1:5, b=rnorm(10))
+lapply(x, mean)
+
+x <- list(a=1:4, b=rnorm(10), c=rnorm(20,1), d=rnorm(100,5))
+lapply(x, mean)
+
+x <- 1:4
+lapply(x, runif)
+
+x <- 1:4
+lapply(x, runif, min = 0, max = 10)
+
+```
+**lapply** and friends make have use of *anonymous* functions.
+```{r}
+x <- list(a = matrix(1:4, 2, 2), b = matrix(1:6, 3, 2))
+x
+```
+An anonymous funciton for extracting the first column of each matrix
+```{r}
+lapply(x, function(elt) elt[,1])
+```
+### Sapply
+
+**sapply** will try to simplify the result of **lapply** if possible. 
+
+- If the result is a list where every element is length 1, then a vector is returned. 
+- If the result is a list where every element is a vector of the same length (>1), a matrix is returned. 
+- If it can't figure things out, a list is returned. 
+```{r}
+x <- list(a =1:4, b=rnorm(10), c=rnorm(20,1), d=rnorm(100,5))
+lapply(x, mean)
+sapply(x, mean)
+
+#mean(x)
+# [1] NA
+# Warning message:
+# In mean.default(x): argument is not numeric or logical: returning NA. 
+```
+### Apply
+
+**apply** is used to a evaluate a funciton (often an anonumous one) over the margins of an array. 
+
+- It is most often used to apply function to the rows or columns of a matrix. 
+- It can be used with general arrays, e-g. taking the average of an array of matrices. 
+- It is not really faster than writing a loop, but it works in one  line!. 
+```{r}
+str(apply)
+```
+- **x** is an array. 
+- **MARGIN** is an integer vector indicating which margin should be "retained". 
+- **FUN** is a funciton to be applied. 
+- ... is for other arguments to be passed to **FUN**
+```{r}
+x <- matrix(rnorm(200), 20, 10)
+
+# This takes the mean across all the rows in each column, limiting the rows from the array 
+apply(x, 2, mean)
+
+# In this case it takes a vector of 20 rows, because there's 20 rows, and inside each and for each row, it calculates the sum of that row. 
+apply(x, 1, sum)
+```
+### Col/row sums and means
+
+For sums and means of matrix dimensions, we have some shortcuts. 
+
+- **rowSums= apply(x, 1, sum)**
+- **rowMeans = apply(x, 1, mean)**
+- **colSums = apply(x, 2, sum)**
+- **colMeans = apply(x, 2, mean)**
+
+The shortcut functions are *much* faster, but you won't notice you're using a large matrix. 
+### Other ways to apply
+
+Quantiles of the rows of a matrix
+```{r}
+
+# This funciton goes through each row of the matrix and calculates the twenty-fifth,
+# and the seventy-fifth parcentile of that row. 
+
+
+x <- matrix(rnorm(200), 20, 10)
+apply(x, 1, quantile, probs = c(0.25, 0.75))
+```
+Average matrix in an array
+```{r}
+a <- array(rnorm(2*2*10), c(2,2,10))
+apply(a, c(1,2), mean)
+
+rowMeans(a, dims = 2)
+```
+### Mapply
+
+**mapply** is a multivariate apply of sorts which applies a funciton unparallel over a set of arguments. 
+
+- **FUN** is a function to apply. 
+- **...** contains arguments to apply over. 
+- **MoreArgs** is a list of other arguments to **FUN**
+- **SIMPLIFY** indicates whether the result should be simplified. 
+
+The following is tedious to type:
+**list(rep(1,4), rep(2,3), rep(3,2), rep(4,1))**
+
+Instead we can do
+```{r}
+mapply(rep, 1:4, 4:1)
+```
+#### Vectorizing a function
+```{r}
+noise <- function(n, mean, sd){
+  rnorm(n, mean, sd)
+}
+noise(5,1,2)
+noise(1:5, 1:5, 2)
+```
+#### Instant Vectorization
+```{r}
+mapply(noise, 1:5, 1:5, 2)
+```
+Which is the same as
+
+```{r}
+list(noise(1,1,2), noise(2,2,2), noise(3,3,2), noise(4,4,2), noise(5,5,2))
+```
+### Tapply
+
+**tapply** is used to apply a functon over subsets of a vector.
+```{r}
+str(tapply)
+```
+- **x** is a vector
+- **INDEX** is a factor or a list of factors (or else they are coerced to factors)
+- **FUN** is a function to be applied
+- **...** contains other arguments to be passed **FUN**
+- **simplify**, should we simplify the result?
+
+Takes groups means
+
+```{r}
+x <- c(rnorm(10), runif(10), rnorm(10))
+f <- gl(3,10)
+f
+tapply(x,f,mean)
+```
+Take group means without simplification
+```{r}
+tapply(x, f, mean, simplify = FALSE)
+```
+Find group ranges
+```{r}
+tapply(x, f, range)
+```
+### Split
+
+**split** takes a vector or other objects and split it into groups determined by a factor or list of factors. 
+```{r}
+str(split)
+```
+- **x** is a vector (or list) or data frame. 
+- **f** is a factor (or coerced to one) or a list of factors. 
+- **drop** indicates whether empty factors levels should be dropped. 
+```{r}
+x <- c(rnorm(10), runif(10), rnorm(10,1))
+f <- gl(3,10)
+split(x,f)
+```
+A common idiom is **split** followed by an **lapply**
+
+```{r}
+lapply(split(x,f), mean)
+```
+#### Splitting a Data Frame
+```{r}
+library(datasets)
+head(airquality)
+s <- split(airquality, airquality$Month)
+lapply(s, function(x) colMeans(x[, c("Ozone", "Solar.R", "Wind")]))
+sapply(s, function(x) colMeans(x[, c("Ozone", "Solar.R", "Wind")]))
+sapply(s, function(x) colMeans(x[, c("Ozone", "Solar.R", "Wind")], na.rm = TRUE))
+
+```
+#### Siplitting on More than One Level
+
+```{r}
+x <- rnorm(10)
+f1 <- gl(2,5)
+f2 <- gl(5,2)
+f1
+f2
+interaction(f1, f2)
+```
+Interactions can create empty levels. 
+
+```{r}
+str(split(x, list(f1, f2)))
+
+```
+Empty levels can be dropped
+```{r}
+str(split(x, list(f1, f2), drop = TRUE))
+```
+## Debugging
+
+### Something's Wrong
+
+Indications that something's not right:
+
+- **Message**: A generic notification/diagnostic message produced by the **message** funciton; execution of the function continues. 
+- **Warning**: An indication that something is wrong but not necessarily fatal; execution of the function continues; generated by the **warning** funciton. 
+- **error**: An indication that a fatal problem has occurred; execution stops; produced by the **stop** funciton. 
+- **condition**: A generic concept for indicating that something unexpected can occur; programmers can create their own conditions. 
+
+**How do you know that something is wrong with your function?**
+
+- What was your input? How did you call the function?
+- What were you expecting? Output, messages, other results?
+- What did you get?
+- How does what you get differ from what you were expecting?
+- Were your expectations correct in the first place?
+- Can you reproduce the problem (exactly)?
+
+**The primary tools for debugging functions in R are**
+
+- **traceback**: prints out the function call stack after an error occurs; does nothing if there's no error. 
+- **debug**: flags a function for "debug" mode which allows you to step through execution of a function one line at a time. 
+- **browser**: Suspends the execution of a function wherever it is called and puts the function in debug mode. 
+- **trace**: allows you to insert debugging code into a function a specific places. 
+- **recover**: allows you to modify the error behavior so that you can crows the funciton call stack. 
+
+These are interactive tools specifically designed to allow you to pick through a function. There's also the more blunt technique of inserting print/call statements in the function. 
+
+#### Summary
+
+- There are main indications of a problem/condition: **massage, warning, error**
+ - Only an **error** is fatal. 
+- When analyzing a function with a problem, make sure you can reproduce the problem, clearly state your expectations and how the output differs from your expecation. 
+- Interactive debugging tools **traceback, debug, crowser, trace** and **recover** can be use yo find problematics code in functions. 
+- Debugging tools are not a substitute for thinking. 

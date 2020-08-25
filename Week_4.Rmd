@@ -1,0 +1,285 @@
+---
+title: "Week 4:Simulation & Profiling"
+author: "Katherine Ramírez Cubillos"
+date: "23/8/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# The srt Function
+
+**srt: Compactly display the internal structure of an R object**
+
+- A diagnostic funciton and an alternative to 'summary'. 
+- It is especially well studied to compactly display the (abbreviated) contents of (possibily nested) lists. 
+- Roughly one line per basic object.
+- The basic goal of str is to answer the question: What is in the object?
+```{r}
+str(str)
+str(lm)
+```
+It shows the funciton arguments for the **lm** function. You can see a very brief summary, it takes the first argument's a formula, the second argument's data, etc. 
+
+The next example generates some normal random variables, 100 of the, mean two variant, and standard derivation four.  
+```{r}
+x <- rnorm(100, 2, 4)
+summary(x)
+## give the first five numbers in the vector x
+str(x)
+
+# The factor has 40 levels and each one is 
+# repeated ten times so if I call str on it. 
+f <- gl(40,10)
+str(f)
+# The output's a llittle bit different. 
+# It gives the number of elements in each of the 40 different levels. 
+summary(f)
+
+```
+It is possible to call str to get a little some different output. In a data-frame it tells that there's a 153 observations, so there are 153 rows in the data frame, with six variables and then for each variable it gives a little output. 
+
+```{r}
+library(datasets)
+head(airquality)
+str(airquality) 
+#Quick examination of data that you might have in R. 
+# And what the structure of different R objects is. 
+```
+Matrix with random normals in there. It will be a 10 by 10 matrix. The function srt will give a little bit more information. It'll say that it's a two-dimensional array. 
+```{r}
+m <- matrix(rnorm(100), 10,10)
+str(m)
+```
+The next example is a list by using the split funciton and see how srt can look at the list and give a compact summary of it. It takes the airquality data frame and split it by the month. 
+```{r}
+s <- split(airquality, airquality$Month)
+str(s)
+```
+This list contains five different data frames where each data frame corresponds to the data for a given month. 
+
+# Simulation
+
+Funcitons for probability distribution in R:
+
+- **rnorm**: generate random Normal variates with a given mean and standar deviation. 
+- **dnorm**: evaluate the Normal probability density (with a given mean/SD) at a point (or vector of points)
+- **pnorm**: evaluate the cumulative distribution function for a normal distribution. 
+- **rpois** generate random Poisson variates with a given rate. 
+
+## Generating Random Numbers
+
+Probability distribution functions usually have four funcitons associated with them. The function are prefixed with a:
+
+- **d** for density.
+- **r** for random number generation. 
+- **p** for cumulative distribution. 
+- **q** for quantile funciton. 
+
+Working with the Normal distributions requires using four functions. 
+```{r}
+dnorm(x, mean = 0, sd = 1, log = FALSE)
+# pnorm(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+# qnorm(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+# rnorm(n, mean = 0, sd = 1)
+
+```
+If $\phi$ is the cumulative distribution for a standar Normal distribution, then $pnorm(q)=\Phi(q)$ and $qnorm(p)=\Phi^{-1}(p)$ 
+```{r}
+x <- rnorm(10)
+x
+
+x <- rnorm(10,20,2)
+x
+```
+Setting the random number with **set.seed** ensures reproducibility. 
+
+```{r}
+set.seed(1)
+rnorm(5)
+rnorm(5)
+set.seed(1)
+rnorm(5)
+```
+Always set the random number seed when conducting a simulation!
+
+## Generating Poisson data
+
+```{r}
+rpois(10,1)
+rpois(10,2)
+rpois(10,20)
+ppois(2,2)   ## Cumulative distribution
+             ## Pr(x <= 2)
+ppois(4,2)   
+             ## Pr(x <= 4)
+ppois(6,2)  
+             ## Pr(x <= 6)
+summary(x)
+```
+## Generating Random Numbers From a Linear Model
+
+Suppose we want to simulate from the following linear model:
+
+$y=\beta_0 + \beta_1x + \epsilon$
+
+where $\epsilon ~ N(0,2^2)$. Assume $x ~ N(0,1^2)$, $\beta_0 = 0.5$ and $\beta_1 = 2$ 
+
+```{r}
+set.seed(20)
+x <- rnorm(100)
+e <- rnorm(100, 0, 2) # std = 0 & media =2. 
+y <- 0.5 + 2*x + e
+summary(y)
+plot(x,y)
+
+```
+What if **x** is binary?
+```{r}
+set.seed(10)
+x <- rbinom(100, 1, 0.5)
+e <- rnorm(100, 0, 2)
+y <- 0.5 + 2*x + e
+summary(y)
+plot(x, y)
+```
+## Generating Random Numbers From a Generalized Linear Model
+
+Suppose we want to simulate from a Poisson model where:
+
+$Y=Poisson \ (u)$
+
+$\log u = \beta_0 + \beta_1x$
+
+And $\beta_0 = 0.5$ and $\beta_1 = 0.5$. We need to use the **rpois** function for this. 
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+log.mu <- 0.5 + 0.3*x
+y <- rpois(100, exp(log.mu))
+summary(y)
+plot(x, y)
+```
+## Random Sampling
+
+The **sample** function draws randomly from a specified set of (scalar) objects allowing you to sample from arbitrary distributions. 
+
+```{r}
+set.seed(1)
+# I pass the vector of integers of one to ten. 
+# I want o sample randomly four of them, without replacements. 
+sample(1:10, 4)
+sample(1:10, 4)
+sample(letters, 5)
+sample(1:10)   ## permutation
+sample(1:10)
+sample(1:10, replace=TRUE)  ## Sample w/replacement
+```
+### Simulation
+
+- Drawing samples from specific probability distributions can be done with **r** functions. 
+- Standar distributions are built in: Normal, Poisson, Binomial, Exponential, Gamma, etc. 
+- The **sample** function can be used to draw random samples from arbitrary vectors. 
+- Setting the random number generator seed via set.seed is critical for reproducibility.
+
+## Profiling R Code
+
+**Why is my code so slow?**
+
+- Proffing is a systematic way to examine how much time is spend in different parts of a program. 
+- Useful when trying to optimize your code. 
+- Often code runs fine once, but what if you have to put it in a loop for 1,000 interation? Is it still fast enough?
+- Profiling is better than guessing. 
+
+**On optimizing your code**
+
+- Getting biggest impact on speeding up code depends on knowing where the code spends most of its time. 
+- This cannot be done without performance analysis or profiling. 
+- We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. (Donald Knuth)
+
+### General principles of optimization
+
+- Design first, then optimize. 
+- Remember: Premature optimization is the root of evil. 
+- Measure (collect data), don't guess. 
+- If you're going to be scientist, you need to apply the same principles here!
+
+### Using system.time()
+
+- Usually, the user time and elapsed time are relatively close, for straight computing tasks. 
+- Elapsed time may be *greater than* user time if the CPU spends a lot of time waiting around. 
+- Elapsted time may be *smaller than* the user time if your machine has multiple cores/processors (and is capable of using them)
+ - Multi-threaded BLAS libraries (vecLib/Accelerate, ATLAS, ACML, MKL)
+ - Parallel processing via the **parallel** package. 
+```{r}
+## Elapsed time > user time
+system.time(readLines("http://www.jhsph.edu"))
+
+## Elapsed time < user time
+hilbert <- function(n){
+  i <- 1:n
+  1 / outer(i - 1, i, "+")
+}
+x <- hilbert(1000)
+system.time(svd(x))
+```
+### Timing longer expressions
+```{r}
+system.time({
+  n <- 1000
+  r <- numeric(n)
+  for(i in 1:n){
+    x <- rnorm(n)
+    r[i] <- mean(x)
+  }
+})
+
+```
+### Beyond system.time()
+
+- Using **system.time()** allows you to test certain functions or code blocks to see if they are taking excessive amounts of time. 
+- Assumes you already know where the problem is and can call **system.time()** on it. 
+- What if you don't know where to start?
+
+### The R Profiler
+
+- The **Rprof()** funciton starts the profiler in R. 
+ - R must be compiled with profiler support (but this is usually the case)
+
+-  The **summaryRprof()** funciotn summarizes the output from **Rprof()** (otherwise it's not readable)
+
+ - Do not use **system.time()** and **Rprof()** together or you will be sad. 
+ 
+ - **Rprof()** keeps track of the function call stack at regularly sample intervals and tabulates how much time is spend in each funciton. 
+
+- Defult sampling interval is 0.02 seconds. 
+
+- NOTE: If your code runs very quicly, the profiler is not useful, but then you probably don't need it in that case. 
+
+### Using summaryRprof()
+
+- The **summaryRprof()** funciton tabulates the R profiler output and calculates how much time is spend in which funciton. 
+- There are two methods for normalizing the data. 
+- "by.total" divides the time spend in each funciton by the total run time. 
+- "by.self" does the same but first subtracts out time spent in functions above in the call stack. 
+
+```{r}
+## lm(y~x)
+sample.interval = 10000
+# $by.total
+# $by.self
+# $sample.interval
+# $sample.time
+```
+### Summary
+
+- **Rprof()** runs the profiler for performance of analysis of R code. 
+- **summaryRprof()** summarizes the output of **Rprof()** and gives percent of time spent in each function (with two of normalization)
+- Good to break your code into functions so that the profiler can give useful informacion about where time is being spent. 
+- C or Fortran code is not profiled. 
+
+```{r}
+```
+ 

@@ -1,0 +1,503 @@
+---
+title: "Week 1: Background, Getting Started, and Nut & Bolts"
+author: "Katherine Ramírez Cubillos"
+date: "16/8/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Programming
+
+This document contains all scripts developed in the first week of the R-Programming course of the John Hopkings University, teaching by Rogger D.Peng.
+
+## Etering Input
+At the R prompt we type expressions. The <- symbol is the assigment operator. 
+
+```{r}
+x <-1
+print(x)
+msg <-"hello"
+```
+The grammar of the language determines whether an expression is complete or not. 
+
+y<- ## Incomplete expression
+
+The # character indicates a comment. Anything to the riht of the # (including the # itself) is ignored. 
+
+## Evaluation
+
+When a complete expression is entered at the prompt, it is evaluated and the result of the evaluated expression is returned. The result may be auto-printed. 
+```{r}
+x <- 5 ## nothing printed
+x      ## auto-printing occurs
+print(x) ## explicit printing
+```
+The [1] indicates that x is a vector and 5 is the first element. 
+
+## Printing
+```{r}
+x<-1:120
+x
+```
+The : operator is used to create integer sequences. 
+
+## Objects
+R has five basic or "atomic" classes of objects:
+
+- character
+- numeric (real numbers)
+- integer
+- complex
+- logical(True/Flase)
+
+The most basic object is a vector:
+
+- A vector can only contain objects of the same class
+- BUT: The one exception is a list, which is represented as a vector but can contain objects of different classes (indeed, that's usually why we use them)
+
+Empty vectors can be created with the **vector()** function. 
+
+## Numbers
+- Numbers in R a generally treates as numeric objects (i.e. double precision real numbers)
+
+- If you explicity want a integrer, you need to specify the **L** suffix
+
+- Ex: Entering **1** gives you a numeric object; entering **1L**
+
+- There is also a special number **Inf** wich represents infinity; e.g. **1/0; Inf** can be used ordinary calculations; e.g. **1/Inf** is 0
+
+- The value **NaN** represents an undefined value (#not a number"); e.g. 0/0; **NaN** can also be thought of as a missing value (more on that later)
+
+## Attributes
+R objects can have atrributes:
+
+- names, dimnames
+- dimanesion (e.g. matrices, arrays)
+- class
+- lenght
+- other user-defined attributes/metadata
+
+Attributes of n object can be accessed using the **attribites()** function. 
+
+## Creating Vectors
+The **c()** function can be used to create vectots of objects. 
+```{r}
+x<-c(0.5, 0.6)        ## numeric
+x<- c(TRUE, FALSE)    ## logical
+x<- c(T, F)           ## logical
+x<- c("a", "b", "c")  ## character
+x<- 9:29              ## integer
+x<- c(1+0i, 2+4i)     ## complex
+```
+Using the **vector ()** function
+```{r}
+x<-vector("numeric", length = 10)
+x
+```
+## Mixing Objects
+
+What about the following?
+```{r}
+y <-c(1.7, "a")        ## character
+y<- c(TRUE, 2)         ## numeric
+y<- c("a", TRUE)       ## character
+```
+When differente objects are mixed in a vector, coercion occurs so that every element in the vector is of the same calss. 
+
+## Explicity Coercion
+Objects can ve explicity coerced from one class to another using the as.* functions, if available. 
+```{r}
+x<- 0:6
+class(x)
+as.numeric(x)
+as.logical(x)
+as.character(x)
+```
+Nonsensical coercion results in **NAS**
+```{r}
+x<- c("a", "b", "c")
+as.numeric(x)
+as.logical(x)
+as.complex(x)
+```
+## Matrices
+Marices are vectors with a dimession atribute. The dimession atrribute is itself an integer vector of length 2 (nrow, ncol)
+```{r}
+m <- matrix(nrow=2, ncol=3)
+m
+dim(m)
+attributes(m)
+```
+Matrices are constructed column-wise, so entries can be thought of starting in the "upper left" corner and running down the columns. 
+```{r}
+m<-matrix(1:6, nrow=2, ncol=3)
+m
+```
+Matrices can also be created directly from vectors by adding a dimesion atribute
+```{r}
+m<-1:10
+m
+dim(m)<-c(2,5)
+m
+```
+### cbind-ing and rbind-ing
+Matrices can be created by column-binding or row-binding with **cbind()** and **rbind()**
+```{r}
+x<-1:3
+y<-10:12
+cbind(x,y)
+rbind(x,y)
+```
+## List
+List are a special type of vector that can contain elements of different classes. List are a very important data type in R and you should know them well. 
+```{r}
+x<-list(1, "a", TRUE, 1+4i)
+x
+```
+## Factors
+Factors are used to represent categorical data. Factor can be unordered or ordered. One can think of a factor as an integer vector each integer has a label. 
+
+- Factors are treated specially by modelling functions like lm() and glm()
+- Using factor with labels is better than using integers because factor are self-describing; having a variable that has values "Male" and "Female" is better than a variable that has value 1 and 2. 
+```{r}
+x<- factor(c("yes", "yes", "yes", "no", "yes", "no"))
+x
+table(x)
+unclass(x)
+```
+
+The order of the levels can be set using the **levels** argument to **factor()**. This can be impportant in linear modelling because the first level is used as the baseline level.
+```{r}
+x<-factor(c("yes", "yes", "no", "yes", "no"),
+           levels=c("yes", "no"))
+x
+```
+## Missing Value
+Missing values are denoted by **NA** or **NaN** for undefined mathematical operations. 
+
+- **is.na()** is used to test objects if they are **NA**
+- **is.nan()** is used to test for **NaN**
+- A **NaN** value is also **NA** but the converse is no true.
+```{r}
+x<- c(1,2,NA,10,3)
+is.na(x)
+is.nan(x)
+x<-c(1,2,NaN, NA, 4)
+is.na(x)
+is.nan(x)
+```
+## Data Frames
+Data frames are used to store tabular data:
+
+- They are represented as a special type of list where every element of the list have the same length. 
+- Each element of the list can be thought of as a column and the length of each element of the list is the number of rows. 
+- Unlike matrices, data frames can store different classes of objects in each column (just like this); matrices must have every element be the same class.
+- Data frames also have a special attribute called **row.names**
+- Data frames are usually created by calling **read.table()** or **read.csv()**
+- Can be converted to a matrix by calling **data.matrix()**
+```{r}
+x<-data.frame(foo=1:4, bar=c(T,T,F,F))
+x
+nrow(x)
+ncol(x)
+```
+## Names
+R objects can also have names, which is very useful for writing readable code and self-describing objects. 
+```{r}
+x<- 1:3
+names(x)
+names(x)<-c("foo", "bar", "norf")
+names(x)
+```
+List can also have names
+```{r}
+x<-list(a=1, b=2, c=3)
+x
+```
+And matrices
+```{r}
+m<-matrix(1:4, nrow=2, ncol=2)
+dimnames(m)<-list(c("a", "b"), c("c", "d"))
+m
+```
+## Reading Data
+There are few principal functions reading data into R. 
+
+- **read.table, read.csv**, for reading tabular data. 
+- **readLines**, for reading lines of a text file. 
+- **source**, for reading in R code files (**inverse** of **dump**)
+- **dget**, for reading in R code files (**inverse** of **dump**)
+- **load**, for reading in saved workspaces
+- **unserialize**, for reading single R objects in binary form
+
+## Writing Data
+There are analogous functions for writing data to files. 
+
+- write.table
+- writeLines
+- dump
+- dput
+- save
+- serialize
+
+## Reading Data Files with read.table
+The **read.table** function is one of the most commonly used functions for reading data. It has a few important arguments:
+
+- **file**, the name of a file, or a connection. 
+- **header**, logical indicating if the file has a header line.
+- **sep**, a string indicating how the columns are separated.
+- **colClasses**, a character vector indicating the calss of each column in the dataset. 
+- **nrows**, the number of rows in the dataset. 
+- **comment.char**, a character string indicating the comment character. 
+- **skip**, the number of lines to skip form the beginning. 
+- **stringsAsFactors**, should character variables be coded as factors?
+
+## Read.table
+For small to moderately sized datasets, you can usually call read.table without specifying any other arguments.
+```{r}
+## data <- read.table("foo.txt)
+```
+
+R will automatically: 
+
+- Skip lines that begin with a #
+- Figure out how many rows there are (and how much memory needs to be allocated)
+- Figure what type of variable is in each column of the Telling R all these things directly makes R run faster and more efficently. 
+- **read.csv** is identical to read.table except that the default separator is a comma.
+
+
+## Reading in Large Dataset with read.table
+
+With much larger datasets, doing the following things will make your life easier and will prevent R from choking. 
+
+- Read the help page for read.table, which contains many hints. 
+- Make a rough calculation of the memory required to store you dataset. If the dataset is larger than the amount of RAN on your computer, you can probably stop right here. 
+- Set **comment.char = " "** if there are no commented lines in your file. 
+- Use the **colClasses** argument. Specifying this option inStead of using the default can make 'read.table' run much faster, often twice as fast. In order to use the option, you have to know the class of each column in your data frame. If all of the columns are "numeric", for example, then you can just set **colClasses="numeric"**, A quick an dirty way to figurre out the classes of each column is the following: 
+```{r}
+## initial <- read.table("datatable.txt", nrows = 100)
+## classes <- sapply(initial, class)
+## tabAll <- read.table("datatable.txt",
+## colClasses = classes)
+```
+Set **nrows**. This doesn't make R run faster it helps with memory usage. A mild overestimate is okay. You can use the Unix tool **wc** to calculate the number of lines in a file. 
+
+## Known The System
+In general, when using R with larger datasets, it's useful to know a few things about your system:
+
+- How much memory is available?
+- What other applications are in use?
+- Are there other users logged into the same system?
+- What operating system?
+- Is the OS 32 or 64?
+
+## Memory Requirements for R objects
+I have a data frame with 1,500,000 rows and 120 columns, all of which are numeric data. Roughly,
+how much memory is required to store this data frame?
+
+1,500,000 × 120 × 8 bytes/numeric
+
+= 1440000000 bytes
+
+= 1440000000 / bytes/MB
+
+= 1,373.29 MB
+
+= 1.34 GB
+
+## Textual Formats
+- **Dumping and dputing** are useful because the resulting textual format is edit-able, and in the case of corruption, potentially recoverable. 
+- **Unlike** writing out a table or cvs file, **dump** and **dput** preserve the *metadata* (sacrificing some readability), so that another user doesn't have to specify it all over again. 
+- **Textual** formats can work much better with version control programs like subversion or git which can only track changes meaningfully in text files. 
+- Textual formats can be longer-lived; if there is corruption somewhere in the file, it can be easier to fix the problbem. 
+- Textual formats adhere to the "Unix philosophy"
+- Downside: The format is not very space-efficient. 
+
+## dput-ting R Objects
+Anotherway to pass data around is by deparsing the R object with dput and reading it back in using **dget**
+
+```{r, eval = T, center=T}
+
+y <- data.frame(a = 1, b = "a")
+dput(y)
+dput(y, file = "y.R")
+new.y <- dget("y.R")
+new.y
+
+```
+## dumping R Objects
+Multiple objects can be deparsed using the dump function and read back in using **source**.
+```{r}
+x<-"foo"
+y<- data.frame(a=1, b="a")
+dump(c("x", "y"), file="data.R")
+rm(x,y)
+source("data.R")
+y
+x
+```
+## Connections: Interfaces to the Outside World
+Data are read in using connection interfaces. Connections can be made to files (most common) or to other more exotic things. 
+
+- **File**, opens a connection to a file. 
+- **Gzfile**, opnes a connection to a file compressed with gzip. 
+- **BZfile**, opnes a connection to a file compressed with bzip2.
+- **url**, opens a connection to a webpage. 
+
+## File Connections:
+```{r}
+str(file)
+```
+- Description is the name of the file. 
+- Open is a code indicating:
+ - "r" read only
+ - "w" writing (and iniatilizing a new file)
+ - "a" appending
+ -"rb", "wb", "ab" reading, writing, or appending in binary mode (Windows)
+ 
+## Connections:
+In general, connections are powerful tools that let you navigate file or other external objects. In practice, we often don't need to deal with the connection interface directly.
+```{r}
+## con <-file("foo.txt", "r")
+## data<- read.csv(con)
+## close(con)
+```
+is the same as
+```{r}
+## data<- read.csv("foo.txt)
+```
+## Reading lines of a text file
+**writeLines** takes a character vector and writes each element one line at a time to text file.
+```{r}
+## con <-gzfile("words.gz")
+## x<-readLines(con, 10)
+## x
+```
+**readLines** can be useful for reading in lines of webpages
+```{r}
+## This might take time
+con <- url("http://www.jhsph.edu", "r")
+x <- readLines(con)
+head(x)
+```
+## Subsetting
+There are a number of operators that can be used to extract subsets of R objects. 
+
+- **[** always returns an object of the same class as the original; can be used to select more that one element (there is one exception)
+- **[[** is used to extract elements of a list or a data frame; it can only be used to extract a single element and the class of the returned object will not necessarily be a list or data frame. 
+- **$** is used to extract elements of a list or data frame by name; semantics are similar to that of [[ . 
+```{r}
+x<- c("a", "b", "c", "c", "d", "a")
+x[1]
+x[2]
+x[1:4]
+x[x>"a"]
+u<- x > "a" ##logical vector
+u
+x[u]
+```
+### Subsetting List
+
+```{r}
+## Example 1
+y<- list(foo=1:4, bar=0.6)
+y[1]
+y[[1]]
+y$bar
+y[["bar"]]
+
+## Example 2
+z<- list(foo=1:4, bar=0.6, baz="hello")
+z[c(1,3)]
+```
+
+The **[[** operator can be used with computed indices; $ can only be used with literal names. 
+```{r}
+v<-list(foo=1:4, bar=0.6, baz="hello")
+name <- "foo"
+v[[name]]  ## compued index for 'foo'
+v$name     ## element 'name' doesn't exist!
+v$foo      ## element 'foo' does exist
+```
+The **[[** can take an integer sequence
+```{r}
+b<-list(a=list(10,12,14), b=c(3.14, 2.81))
+b[[c(1,3)]]
+b[[1]][[3]]
+b[[c(2,1)]]
+```
+### Subsetting a Matrix
+Matrices can be subsetted in the usual with *(i,j)* type indices. 
+```{r}
+x<-matrix(1:6, 2,3)
+x[1,2]
+x[2,1]
+```
+Indices can also be missing
+```{r}
+x[1,]
+x[,2]
+```
+By default, when a single element of a matriz is retrieved, it is returned as a vector of length 1 rather than a 1x1 matrix. This behavior can be turned off by setting **drop="False"
+```{r}
+x<-matrix(1:6,2,3)
+x[1,2]
+x[1,3, drop=FALSE]
+```
+Similary, subsetting a single column or a single row will give you a vector, not a matrix (by default)
+```{r}
+x<-matrix(1:6, 2,3)
+x[1,]
+x[1, , drop=FALSE]
+```
+## Partial Martching
+Partial marching of names is allowed with **[[** **$**.
+```{r}
+x<- list(aardvark=1:5)
+x$a
+x[["a"]]  ##By default [[]] doesn't do partial matching like dollar sign does. It gets null back, because there's no element of the list that has the name a.
+x[["a", exact=FALSE]]
+```
+## Removing NA values
+A common task is to remove missing values **(NAs)**
+```{r}
+x<- c(1,2,NA,4,NA,5)
+bad <-is.na(x)  ## logical vector which is true if the element is missing and false if it's not missing
+x[!bad]
+```
+What if there are multiple things and you want to take the subset with no missing value?
+```{r}
+x<-c(1,2,NA,4,NA,5)
+y<-c("a", "b", NA, "d", NA, "f")
+good<-complete.cases(x,y)
+good
+x[good]
+y[good]
+```
+It's possible revoe missing values from data frames. 
+```{r}
+airquality[1:6,]
+good <-complete.cases(airquality)
+airquality[good, ][1:6, ]
+```
+## Vectorized Operations
+Many operations in R are *vectorized* making code more efficient, concise, and easier to read:
+```{r}
+x<-1:4; y<-6:9
+x+y
+x>2
+x>=2
+y==8
+x*y
+x/y
+```
+## Vectorized Matrix Operations
+```{r}
+x<-matrix(1:4, 2,2); y <-matrix(rep(10,4), 2,2)
+x*y    ## element-wise multiplication
+x/y
+x%%y   ## true matrix multiplication
+```
